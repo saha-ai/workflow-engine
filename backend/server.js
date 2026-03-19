@@ -10,7 +10,12 @@ const Rule = require('./models/rule');
 const Execution = require('./models/execution');
 
 const app = express();
-app.use(cors());
+// Allow all origins for testing
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json());
 
 // MongoDB connection
