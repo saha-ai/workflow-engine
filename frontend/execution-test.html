@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Workflow Execution Test</title>
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        .container { max-width: 600px; margin: 0 auto; }
+        input, button { padding: 8px; margin: 5px; }
+        .result { background: #f0f0f0; padding: 15px; border-radius: 5px; margin-top: 20px; }
+        .log { border-bottom: 1px solid #ddd; padding: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Test Workflow Execution</h2>
+        
+        <div>
+            <label>Amount:</label>
+            <input type="number" id="amount" value="500">
+            <button onclick="executeWorkflow()">Start Execution</button>
+        </div>
+
+        <div id="result" class="result" style="display:none;">
+            <h3>Execution Result:</h3>
+            <div id="executionId"></div>
+            <div id="status"></div>
+            <div id="currentStep"></div>
+            <h4>Logs:</h4>
+            <div id="logs"></div>
+        </div>
+    </div>
+
+    <script>
+        const WORKFLOW_ID = "69bb7e0fedfca1880829ec7b"; // Your workflow ID
+        
+        async function executeWorkflow() {
+            const amount = document.getElementById('amount').value;
+            
+            // Step 1: Start execution
+            const startResponse = await fetch(`http://localhost:3000/workflows/${WORKFLOW_ID}/execute`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ amount: parseInt(amount) })
+            });
+            
+            const startData = await startResponse.json();
+            const executionId = startData.executionId;
+            
+            // Step 2: Wait a bit then get status
+            setTimeout(() => checkExecution(executionId), 1000);
+        }
+        
+        async function checkExecution(executionId) {
+            const response = await fetch(`http://localhost:3000/executions/${executionId}`);
+            const data = await response.json();
+            
+            // Display results
+            document.getElementById('result').style.display = 'block';
+            document.getElementById('executionId').innerHTML = `<strong>Execution ID:</strong> ${data._id}`;
+            document.getElementById('status').innerHTML = `<strong>Status:</strong> ${data.status}`;
+            document.getElementById('currentStep').innerHTML = `<strong>Current Step:</strong> ${data.currentStepId || 'Completed'}`;
+            
+            // Show logs
+            const logsDiv = document.getElementById('logs');
+            logsDiv.innerHTML = '';
+            data.logs.forEach(log => {
+                logsDiv.innerHTML += `
+                    <div class="log">
+                        <strong>Step:</strong> ${log.step}<br>
+                        <strong>Rule:</strong> ${log.ruleCondition}<br>
+                        <strong>Matched:</strong> ${log.ruleMatched}<br>
+                        <strong>Next Step:</strong> ${log.nextStep || 'None'}<br>
+                        <small>${new Date(log.timestamp).toLocaleTimeString()}</small>
+                    </div>
+                `;
+            });
+        }
+    </script>
+</body>
+</html>

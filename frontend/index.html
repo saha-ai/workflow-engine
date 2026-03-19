@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Auto Approval Workflow</title>
+
+  <style>
+    body {
+      font-family: Arial;
+      background: #f0f2f5;
+      text-align: center;
+    }
+h3 {
+  color: #333;
+}
+
+.success {
+  color: green;
+  font-weight: bold;
+}
+    .container {
+      background: white;
+      padding: 30px;
+      width: 400px;
+      margin: 50px auto;
+      border-radius: 10px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+
+    input {
+      padding: 10px;
+      width: 80%;
+      margin: 10px;
+    }
+
+    button {
+      padding: 10px 20px;
+      background: blue;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .step {
+      margin-top: 15px;
+      padding: 10px;
+      border-radius: 5px;
+      background: #f9f9f9;
+    }
+
+    .success {
+      color: green;
+      font-weight: bold;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <h2> Automatic Approval </h2>
+
+  <input type="number" id="amount" placeholder="Enter Amount">
+
+  <br>
+  <button onclick="runWorkflow()">Submit</button>
+
+  <div id="steps"></div>
+
+</div>
+
+<script>
+
+async function runWorkflow() {
+
+  const amount = document.getElementById("amount").value;
+
+  if (!amount) {
+    alert("Enter amount!");
+    return;
+  }
+
+  const res = await fetch("http://localhost:3000/execute/YOUR_ID_HERE", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      amount: Number(amount),
+      approved: true
+    })
+  });
+
+  const data = await res.json();
+
+  showResult(data);   // ✅ send full data
+}
+
+function showSteps(data) {
+
+  let html = `<h3>${data.message}</h3>`;   // ✅ show message
+
+  data.logs.forEach((log, index) => {
+    html += `
+      <div class="step">
+        Step ${index + 1}: <b>${log.step}</b> →
+        <span class="success">Approved ✅</span>
+      </div>
+    `;
+  });
+
+  document.getElementById("steps").innerHTML = html;
+}
+function showResult(data) {
+
+  let html = `
+    <h3 style="color:green;">${data.message}</h3>
+  `;
+
+  data.logs.forEach((log, index) => {
+    html += `
+      <div class="step">
+        Step ${index + 1}: <b>${log.step}</b> →
+        <span style="color:green;">Approved ✅</span>
+      </div>
+    `;
+  });
+
+  document.getElementById("steps").innerHTML = html;
+}
+</script>
+
+</body>
+</html>
