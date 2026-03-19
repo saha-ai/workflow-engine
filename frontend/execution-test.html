@@ -1,80 +1,341 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Workflow Execution Test</title>
-    <style>
-        body { font-family: Arial; padding: 20px; }
-        .container { max-width: 600px; margin: 0 auto; }
-        input, button { padding: 8px; margin: 5px; }
-        .result { background: #f0f0f0; padding: 15px; border-radius: 5px; margin-top: 20px; }
-        .log { border-bottom: 1px solid #ddd; padding: 10px; }
-    </style>
+  <meta charset="UTF-8">
+  <title>Halleyx Automation - Email Approval System</title>
+
+  <!-- Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+
+  <style>
+    body {
+      background: linear-gradient(135deg, #1e3c72, #2a5298);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .card {
+      border-radius: 20px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+      border: none;
+      backdrop-filter: blur(10px);
+      background: rgba(255, 255, 255, 0.95);
+    }
+
+    .title {
+      font-weight: 700;
+      color: #1e3c72;
+      font-size: 1.8rem;
+    }
+
+    .subtitle {
+      color: #666;
+      font-size: 0.95rem;
+      margin-bottom: 25px;
+    }
+
+    .step {
+      padding: 12px 15px;
+      margin-top: 10px;
+      border-radius: 10px;
+      background: #f8f9fa;
+      border-left: 4px solid #2a5298;
+      transition: all 0.3s ease;
+    }
+
+    .step:hover {
+      transform: translateX(5px);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+
+    .success {
+      color: #28a745;
+      font-weight: 600;
+    }
+
+    .warning {
+      color: #ffc107;
+      font-weight: 600;
+    }
+
+    .danger {
+      color: #dc3545;
+      font-weight: 600;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #1e3c72, #2a5298);
+      border: none;
+      padding: 12px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      transition: all 0.3s ease;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+    }
+
+    .form-label {
+      font-weight: 500;
+      color: #444;
+      margin-bottom: 5px;
+    }
+
+    .form-control {
+      border-radius: 10px;
+      border: 2px solid #e0e0e0;
+      padding: 10px 15px;
+      transition: all 0.3s ease;
+    }
+
+    .form-control:focus {
+      border-color: #2a5298;
+      box-shadow: 0 0 0 0.2rem rgba(42, 82, 152, 0.25);
+    }
+
+    .spinner-border {
+      width: 3rem;
+      height: 3rem;
+      margin: 20px auto;
+    }
+
+    .alert {
+      border-radius: 10px;
+      border: none;
+      padding: 15px;
+    }
+
+    .badge-email {
+      background: #e3f2fd;
+      color: #1e3c72;
+      padding: 3px 10px;
+      border-radius: 15px;
+      font-size: 0.8rem;
+      margin-left: 10px;
+    }
+  </style>
 </head>
+
 <body>
-    <div class="container">
-        <h2>Test Workflow Execution</h2>
-        
-        <div>
-            <label>Amount:</label>
-            <input type="number" id="amount" value="500">
-            <button onclick="executeWorkflow()">Start Execution</button>
+
+<div class="container">
+  <div class="row justify-content-center">
+    <div class="col-lg-6 col-md-8">
+
+      <div class="card p-4">
+
+        <div class="text-center mb-4">
+          <h3 class="title">
+            <i class="bi bi-envelope-paper-fill me-2"></i>Halleyx Automation
+          </h3>
+          <p class="subtitle">
+            <i class="bi bi-shield-check me-1"></i>Smart Email-Based Approval System
+          </p>
         </div>
 
-        <div id="result" class="result" style="display:none;">
-            <h3>Execution Result:</h3>
-            <div id="executionId"></div>
-            <div id="status"></div>
-            <div id="currentStep"></div>
-            <h4>Logs:</h4>
-            <div id="logs"></div>
+        <div class="mb-4">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">
+                <i class="bi bi-person-circle me-1"></i>Employee Name
+              </label>
+              <input type="text" id="employeeName" class="form-control" value="John Doe" placeholder="Enter name">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">
+                <i class="bi bi-envelope me-1"></i>Employee Email
+              </label>
+              <input type="email" id="employeeEmail" class="form-control" value="john.doe@company.com" placeholder="Enter email">
+            </div>
+          </div>
+
+          <div class="row g-3 mt-2">
+            <div class="col-md-6">
+              <label class="form-label">
+                <i class="bi bi-building me-1"></i>Department
+              </label>
+              <select id="department" class="form-control">
+                <option value="Engineering">Engineering</option>
+                <option value="Sales">Sales</option>
+                <option value="Marketing">Marketing</option>
+                <option value="HR">HR</option>
+                <option value="Finance">Finance</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">
+                <i class="bi bi-currency-dollar me-1"></i>Amount ($)
+              </label>
+              <input type="number" id="amount" class="form-control" value="500" placeholder="Enter amount">
+            </div>
+          </div>
+
+          <div class="mt-3">
+            <label class="form-label">
+              <i class="bi bi-card-text me-1"></i>Purpose
+            </label>
+            <textarea id="purpose" class="form-control" rows="2" placeholder="Describe the expense">Software license purchase</textarea>
+          </div>
         </div>
+
+        <button class="btn btn-primary w-100 mb-3" onclick="runWorkflow()">
+          <i class="bi bi-send-check-fill me-2"></i>Submit for Approval
+        </button>
+
+        <!-- Email Flow Visualization -->
+        <div class="text-center mb-3">
+          <small class="text-muted">
+            <i class="bi bi-envelope me-1"></i>Manager • 
+            <i class="bi bi-envelope me-1"></i>CEO • 
+            <i class="bi bi-envelope me-1"></i>Finance
+          </small>
+        </div>
+
+        <div id="steps" class="mt-3"></div>
+
+      </div>
+
     </div>
+  </div>
+</div>
 
-    <script>
-        const WORKFLOW_ID = "69bb7e0fedfca1880829ec7b"; // Your workflow ID
-        
-        async function executeWorkflow() {
-            const amount = document.getElementById('amount').value;
-            
-            // Step 1: Start execution
-            const startResponse = await fetch(`http://localhost:3000/workflows/${WORKFLOW_ID}/execute`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ amount: parseInt(amount) })
-            });
-            
-            const startData = await startResponse.json();
-            const executionId = startData.executionId;
-            
-            // Step 2: Wait a bit then get status
-            setTimeout(() => checkExecution(executionId), 1000);
-        }
-        
-        async function checkExecution(executionId) {
-            const response = await fetch(`http://localhost:3000/executions/${executionId}`);
-            const data = await response.json();
-            
-            // Display results
-            document.getElementById('result').style.display = 'block';
-            document.getElementById('executionId').innerHTML = `<strong>Execution ID:</strong> ${data._id}`;
-            document.getElementById('status').innerHTML = `<strong>Status:</strong> ${data.status}`;
-            document.getElementById('currentStep').innerHTML = `<strong>Current Step:</strong> ${data.currentStepId || 'Completed'}`;
-            
-            // Show logs
-            const logsDiv = document.getElementById('logs');
-            logsDiv.innerHTML = '';
-            data.logs.forEach(log => {
-                logsDiv.innerHTML += `
-                    <div class="log">
-                        <strong>Step:</strong> ${log.step}<br>
-                        <strong>Rule:</strong> ${log.ruleCondition}<br>
-                        <strong>Matched:</strong> ${log.ruleMatched}<br>
-                        <strong>Next Step:</strong> ${log.nextStep || 'None'}<br>
-                        <small>${new Date(log.timestamp).toLocaleTimeString()}</small>
-                    </div>
-                `;
-            });
-        }
-    </script>
+<script>
+// ✅ YOUR WORKFLOW ID
+const workflowId = "69bbfd2e4ede952eac0356db";
+
+// ✅ BASE URL
+const BASE_URL = "https://workflow-engine-o23h.onrender.com";
+
+async function runWorkflow() {
+  const amount = document.getElementById("amount").value;
+  const employeeName = document.getElementById("employeeName").value;
+  const employeeEmail = document.getElementById("employeeEmail").value;
+  const department = document.getElementById("department").value;
+  const purpose = document.getElementById("purpose").value;
+
+  if (!amount || !employeeName || !employeeEmail || !department || !purpose) {
+    alert("Please fill all fields");
+    return;
+  }
+
+  // Show loading with email animation
+  document.getElementById("steps").innerHTML = `
+    <div class="text-center">
+      <div class="spinner-border text-primary" role="status"></div>
+      <p class="mt-3 fw-bold">Sending Email Notifications...</p>
+      <div class="d-flex justify-content-center gap-3 mt-2">
+        <span class="badge-email"><i class="bi bi-envelope"></i> Manager</span>
+        ${Number(amount) > 1000 ? '<span class="badge-email"><i class="bi bi-envelope"></i> CEO</span>' : ''}
+        <span class="badge-email"><i class="bi bi-envelope"></i> Finance</span>
+      </div>
+    </div>
+  `;
+
+  try {
+    // Start the execution
+    const startRes = await fetch(
+      `${BASE_URL}/workflows/${workflowId}/execute`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          amount: Number(amount),
+          employeeName,
+          employeeEmail,
+          department,
+          purpose
+        })
+      }
+    );
+
+    if (!startRes.ok) {
+      throw new Error(`HTTP error! status: ${startRes.status}`);
+    }
+
+    const startData = await startRes.json();
+    
+    // Show success message based on amount
+    let emailFlow = "";
+    if (Number(amount) > 1000) {
+      emailFlow = `
+        <div class="step">
+          <i class="bi bi-envelope-check-fill text-primary me-2"></i>
+          <strong>📧 Manager Approval</strong> <span class="badge-email">manager@company.com</span>
+        </div>
+        <div class="step">
+          <i class="bi bi-envelope-check-fill text-warning me-2"></i>
+          <strong>📧 CEO Approval</strong> <span class="badge-email">ceo@company.com</span>
+        </div>
+        <div class="step">
+          <i class="bi bi-envelope-check-fill text-success me-2"></i>
+          <strong>📧 Finance Notification</strong> <span class="badge-email">finance@company.com</span>
+        </div>
+      `;
+    } else {
+      emailFlow = `
+        <div class="step">
+          <i class="bi bi-envelope-check-fill text-primary me-2"></i>
+          <strong>📧 Manager Approval</strong> <span class="badge-email">manager@company.com</span>
+        </div>
+        <div class="step">
+          <i class="bi bi-envelope-check-fill text-success me-2"></i>
+          <strong>📧 Finance Notification</strong> <span class="badge-email">finance@company.com</span>
+        </div>
+      `;
+    }
+
+    document.getElementById("steps").innerHTML = `
+      <div class="alert alert-success">
+        <i class="bi bi-check-circle-fill me-2"></i>
+        <strong>✅ Workflow Started Successfully!</strong>
+      </div>
+      <div class="mt-3">
+        <h6 class="mb-3"><i class="bi bi-envelope-paper me-2"></i>Email Notifications Sent:</h6>
+        ${emailFlow}
+      </div>
+      <div class="alert alert-info mt-3 small">
+        <i class="bi bi-info-circle me-2"></i>
+        Execution ID: ${startData.executionId}
+      </div>
+    `;
+
+  } catch (error) {
+    document.getElementById("steps").innerHTML = `
+      <div class="alert alert-danger">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        ❌ Error: ${error.message}
+      </div>
+    `;
+  }
+}
+
+// Add real-time amount display
+document.getElementById('amount').addEventListener('input', function(e) {
+  const amount = Number(e.target.value);
+  const stepsDiv = document.getElementById('steps');
+  
+  if (amount > 1000) {
+    stepsDiv.innerHTML = `
+      <div class="alert alert-warning small">
+        <i class="bi bi-star-fill me-2"></i>
+        High amount detected (> $1000) - CEO approval will be required
+      </div>
+    `;
+  } else {
+    stepsDiv.innerHTML = '';
+  }
+});
+</script>
+
 </body>
 </html>
