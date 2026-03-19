@@ -21,17 +21,25 @@ app.use(cors({
 app.use(express.json());
 
 // MongoDB connection with environment variable
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/workflow';
-
-mongoose.connect(MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-  serverSelectionTimeoutMS: 5000,
-})
-.then(() => console.log('MongoDB Connected Successfully'))
-.catch(err => {
-  console.error('MongoDB Connection Error:', err.message);
-});
+// MongoDB connection with environment variable
+const MONGODB_URI = process.env.MONGODB_URI;
+if (!MONGODB_URI) {
+  console.error("❌ MONGODB_URI not found in environment variables");
+  process.exit(1);
+}
+console.log("MONGODB_URI VALUE:", process.env.MONGODB_URI);
+console.log("Using Mongo URI:", MONGODB_URI);
+async function connectDB() {
+  try {
+    await mongoose.connect(MONGODB_URI);
+    console.log('MongoDB Connected Successfully');
+  } catch (err) {
+    console.error('MongoDB Connection Error:', err.message);
+    process.exit(1);
+  }
+}
+connectDB();
+console.log("🔥 RENDER MONGO URI:", process.env.MONGODB_URI);
 
 /* =========================
    Helper: Evaluate condition safely
