@@ -10,18 +10,28 @@ const Rule = require('./models/rule');
 const Execution = require('./models/execution');
 
 const app = express();
-// Allow all origins for testing
+
+// CORS configuration for deployment
 app.use(cors({
   origin: '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
 app.use(express.json());
 
-// MongoDB connection
-mongoose.connect('mongodb://127.0.0.1:27017/workflow')
-  .then(() => console.log('MongoDB Connected'))
-  .catch(err => console.log(err));
+// MongoDB connection with environment variable
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/workflow';
+
+mongoose.connect(MONGODB_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  serverSelectionTimeoutMS: 5000,
+})
+.then(() => console.log('MongoDB Connected Successfully'))
+.catch(err => {
+  console.error('MongoDB Connection Error:', err.message);
+});
 
 /* =========================
    Helper: Evaluate condition safely
@@ -37,6 +47,53 @@ function evaluateCondition(condition, data) {
     return false;
   }
 }
+
+/* =========================
+   Debug Endpoint - Check MongoDB Connection
+========================= */
+app.get('/debug', async (req, res) => {
+  try {
+    const dbState = mongoose.connection.readyState;
+    const states = {
+      0: 'disconnected',
+      1: 'connected',
+      2: 'connecting',
+      3: 'disconnecting'
+    };
+    
+    const status = {
+      server: 'running',
+      mongodb: {
+        state: states[dbState] || 'unknown',
+        readyState: dbState
+      },
+      environment: process.env.NODE_ENV || 'development',
+      timestamp: new Date().toISOString()
+    };
+
+    // If connected to MongoDB, try to get some stats
+    if (dbState === 1) {
+      try {
+        const collections = await mongoose.connection.db.listCollections().toArray();
+        status.mongodb.collections = collections.map(c => c.name);
+        status.mongodb.database = mongoose.connection.db.databaseName;
+        
+        // Check if workflow exists
+        const workflowCount = await Workflow.countDocuments();
+        status.mongodb.workflowCount = workflowCount;
+      } catch (err) {
+        status.mongodb.error = err.message;
+      }
+    }
+
+    res.json(status);
+  } catch (err) {
+    res.status(500).json({ 
+      error: err.message,
+      stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+    });
+  }
+});
 
 /* =========================
    WORKFLOW ENDPOINTS
@@ -61,6 +118,7 @@ app.post('/workflows', async (req, res) => {
     await workflow.save();
     res.status(201).json(workflow);
   } catch (err) {
+    console.error('Create workflow error:', err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -87,6 +145,7 @@ app.get('/workflows', async (req, res) => {
       pages: Math.ceil(total / limit)
     });
   } catch (err) {
+    console.error('List workflows error:', err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -104,6 +163,7 @@ app.get('/workflows/:id', async (req, res) => {
     }
     res.json({ workflow, steps });
   } catch (err) {
+    console.error('Get workflow error:', err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -166,6 +226,7 @@ app.put('/workflows/:id', async (req, res) => {
 
     res.status(201).json(newWorkflow);
   } catch (err) {
+    console.error('Update workflow error:', err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -186,6 +247,7 @@ app.delete('/workflows/:id', async (req, res) => {
 
     res.json({ message: 'Workflow deleted successfully' });
   } catch (err) {
+    console.error('Delete workflow error:', err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -212,6 +274,7 @@ app.post('/workflows/:workflow_id/steps', async (req, res) => {
     await step.save();
     res.status(201).json(step);
   } catch (err) {
+    console.error('Create step error:', err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -222,6 +285,7 @@ app.get('/workflows/:workflow_id/steps', async (req, res) => {
     const steps = await Step.find({ workflowId: req.params.workflow_id }).sort('createdAt');
     res.json(steps);
   } catch (err) {
+    console.error('List steps error:', err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -233,6 +297,7 @@ app.put('/steps/:id', async (req, res) => {
     if (!step) return res.status(404).json({ message: 'Step not found' });
     res.json(step);
   } catch (err) {
+    console.error('Update step error:', err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -247,6 +312,7 @@ app.delete('/steps/:id', async (req, res) => {
     await step.deleteOne();
     res.json({ message: 'Step deleted' });
   } catch (err) {
+    console.error('Delete step error:', err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -274,6 +340,7 @@ app.post('/steps/:step_id/rules', async (req, res) => {
     await rule.save();
     res.status(201).json(rule);
   } catch (err) {
+    console.error('Create rule error:', err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -284,6 +351,7 @@ app.get('/steps/:step_id/rules', async (req, res) => {
     const rules = await Rule.find({ stepId: req.params.step_id }).sort('priority');
     res.json(rules);
   } catch (err) {
+    console.error('List rules error:', err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -306,6 +374,7 @@ app.put('/rules/:id', async (req, res) => {
     if (!rule) return res.status(404).json({ message: 'Rule not found' });
     res.json(rule);
   } catch (err) {
+    console.error('Update rule error:', err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -318,6 +387,7 @@ app.delete('/rules/:id', async (req, res) => {
     await rule.deleteOne();
     res.json({ message: 'Rule deleted' });
   } catch (err) {
+    console.error('Delete rule error:', err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -352,6 +422,7 @@ app.post('/workflows/:workflow_id/execute', async (req, res) => {
       message: 'Execution started' 
     });
   } catch (err) {
+    console.error('Start execution error:', err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -364,6 +435,7 @@ app.get('/executions/:id', async (req, res) => {
     if (!execution) return res.status(404).json({ message: 'Execution not found' });
     res.json(execution);
   } catch (err) {
+    console.error('Get execution error:', err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -377,6 +449,7 @@ app.get('/executions', async (req, res) => {
       .limit(100);
     res.json(executions);
   } catch (err) {
+    console.error('List executions error:', err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -404,6 +477,7 @@ app.post('/executions/:id/cancel', async (req, res) => {
 
     res.json({ message: 'Execution cancelled' });
   } catch (err) {
+    console.error('Cancel execution error:', err);
     res.status(500).json({ error: err.message });
   }
 });
@@ -435,6 +509,7 @@ app.post('/executions/:id/retry', async (req, res) => {
 
     res.json({ message: 'Retry initiated' });
   } catch (err) {
+    console.error('Retry execution error:', err);
     res.status(500).json({ error: err.message });
   }
 });
