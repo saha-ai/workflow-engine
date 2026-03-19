@@ -1,4 +1,7 @@
 const express = require('express');
+const path = require("path");
+
+
 const mongoose = require('mongoose');
 const cors = require('cors');
 require('dotenv').config();
@@ -19,7 +22,8 @@ app.use(cors({
 }));
 
 app.use(express.json());
-
+// Serve static files
+app.use(express.static(path.join(__dirname, "frontend")));
 // MongoDB connection with environment variable
 // MongoDB connection with environment variable
 const MONGODB_URI = process.env.MONGODB_URI;
@@ -661,6 +665,9 @@ async function processExecution(executionId, isRetry = false) {
 /* =========================
    Test Route
 ========================= */
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "frontend", "execution.html"));
+});
 app.get('/', (req, res) => {
   res.send('Workflow Engine Server Working');
 });
